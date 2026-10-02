@@ -7,10 +7,14 @@ use AcidIndustries\Livelog\Payloads\GroupEndPayload;
 use AcidIndustries\Livelog\Payloads\GroupStartPayload;
 use AcidIndustries\Livelog\Payloads\MessagePayload;
 use AcidIndustries\Livelog\Payloads\Payload;
+use AcidIndustries\Livelog\Payloads\RequestEndPayload;
+use AcidIndustries\Livelog\Payloads\RequestStartPayload;
 use AcidIndustries\Livelog\Payloads\SpacerPayload;
 use AcidIndustries\Livelog\Payloads\TimerPayload;
+use AcidIndustries\Livelog\Payloads\VariablePayload;
 use BadFunctionCallException;
 use DateInterval;
+use DateTime;
 use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
@@ -25,6 +29,10 @@ class Livelog {
     private static array $_timers = [];
     private static ?string $_sessionId = null;
     private static ?string $_requestId = null;
+    private static ?DateTimeImmutable $_requestTimer = null;
+    private static ?string $_requestMethod = null;
+    private static ?string $_requestPath = null;
+    private static ?string $_requestStatusCode = null;
 
     public static function init(?Settings $settings = null) {
         self::$_settings = $settings ?? self::$_settings ?? new Settings();
@@ -77,8 +85,27 @@ class Livelog {
         return $payload;
     }
 
-    public static function dump(mixed $value, ?string $label = null) {
-        return new VariablePayload($value, $label);
+    public static function dump(
+        mixed $value,
+        ?string $label = null,
+    ): ?VariablePayload {
+        if (!self::isActive()) {
+            return null;
+        }
+
+        self::init();
+
+        $payload = new VariablePayload(
+            $value,
+            $label,
+            self::$_sessionId,
+            self::$_requestId,
+            self::captureSource(),
+        );
+
+        self::enqueue($payload);
+
+        return $payload;
     }
 
     public static function spacer(?string $label = null): ?SpacerPayload {
@@ -156,11 +183,35 @@ class Livelog {
     }
 
     public static function requestStart(string $method, string $path, ?string $requestId = null) {
-        throw new BadFunctionCallException();
+        self::$_requestId = $requestId;
+
+        self::$_requestTimer = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+
+        $payload = new RequestStartPayload(
+            $method,
+            $path,
+            self::$_sessionId,
+            $requestId,
+        );
+
+        self::enqueue($payload);
+
+        return $payload;
     }
 
-    public static function requestEnd(int $statusCode = null) {
-        throw new BadFunctionCallException();
+    public static function requestEnd(int $statusCode) {
+        $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+
+        $payload = new RequestEndPayload(
+            $statusCode,
+            self::$_requestTimer->diff($now),
+            self::$_sessionId,
+            self::$_requestId,
+        );
+
+        self::enqueue($payload);
+
+        return $payload;
     }
 
     public static function startTimer(string $name) {

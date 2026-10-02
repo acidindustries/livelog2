@@ -9,9 +9,12 @@ Livelog::init((new Settings())->port(5092));
 Livelog::setSessionId('debug-session');
 Livelog::setRequestId('request-123');
 
-Livelog::startTimer('timer');
-// Livelog::timer('External', new DateInterval('PT3S'));
-Livelog::stopTimer('timer');
+$payloadStart = Livelog::requestStart('POST', '/imile');
+$payloadEnd = Livelog::requestEnd(200);
+
+echo json_encode($payloadStart, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
+echo json_encode($payloadEnd, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
+
 if (!Livelog::ship()) {
     error_log('Livelog delivery failed; unsent events');
 }
