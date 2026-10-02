@@ -1,0 +1,19 @@
+{
+    "name": "acidindustries/livelog",
+    "description": "The Livelog SDK for PHP",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "AcidIndustries\\Livelog\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Acid Industries Inc."
+        }
+    ],
+    "require": {
+        "ramsey/uuid": "^4.9",
+        "ext-curl": "*"
+    }
+}

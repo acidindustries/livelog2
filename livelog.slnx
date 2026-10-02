@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Livelog.Server/Livelog.Server.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Livelog.Server.Tests/Livelog.Server.Tests.csproj" />
+  </Folder>
+</Solution>
